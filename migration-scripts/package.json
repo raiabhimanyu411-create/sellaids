@@ -1,0 +1,16 @@
+{
+  "name": "cloudinary-migration",
+  "version": "1.0.0",
+  "description": "Migrate product images to Cloudinary",
+  "scripts": {
+    "test": "node testSingleProduct.js",
+    "check": "node checkMapping.js",
+    "migrate": "node migrateUrls.js",
+    "backup": "node backupDatabase.js"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.0",
+    "cloudinary": "^1.41.0",
+    "dotenv": "^16.3.1"
+  }
+}

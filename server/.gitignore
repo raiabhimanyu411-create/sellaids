@@ -1,0 +1,60 @@
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build and output directories
+dist/
+build/
+coverage/
+.tmp/
+.cache/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE folders
+.vscode/
+.idea/
+*.swp
+
+# Uploads (optional - if you store uploads locally)
+uploads/
+public/uploads/
+temp/
+tmp/
+
+# src/public/
+
+# PM2 process logs (if using PM2 for deployment)
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Database dumps / backups (optional)
+*.sql
+*.bak
+*.db
+
+# Optional: Ignore test coverage reports
+coverage/
+
+# Optional: Ignore package-lock if using yarn/pnpm
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

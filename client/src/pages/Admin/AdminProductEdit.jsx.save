@@ -1,0 +1,518 @@
+// src/pages/admin/AdminProductEdit.jsx
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const PRODUCT_CONDITION_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "almost_new", label: "Almost New" },
+  { value: "good", label: "Good" },
+  { value: "hardly_ever_used", label: "Hardly Ever Used" },
+  { value: "satisfactory", label: "Satisfactory" },
+];
+
+/* ================= FORM FIELD ================= */
+const FormField = ({ field, value, onChange, disabled, previewUrl }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState(field.options || []);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    if (searchValue && Array.isArray(field.options)) {
+      setFilteredOptions(
+        field.options.filter((opt) =>
+          (opt.name || opt)
+            .toLowerCase()
+            .includes(searchValue.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredOptions(field.options || []);
+    }
+  }, [searchValue, field.options]);
+
+  useEffect(() => {
+    const close = (e) =>
+      wrapperRef.current &&
+      !wrapperRef.current.contains(e.target) &&
+      setIsOpen(false);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  const handleSelect = (val) => {
+    let finalVal = val;
+    if (field.name === "productCategory") finalVal = val.name || val;
+    onChange({ target: { name: field.name, value: finalVal } });
+    setIsOpen(false);
+    setSearchValue("");
+  };
+
+  /* ===== SELECT ===== */
+  if (field.type === "select") {
+    return (
+      <div className="flex flex-col" ref={wrapperRef}>
+        <label className="font-medium mb-1">{field.label}</label>
+        <div
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          className={`border rounded px-3 py-2 cursor-pointer ${
+            disabled ? "bg-gray-100" : ""
+          }`}
+        >
+          {field.name === "product_condition"
+            ? PRODUCT_CONDITION_OPTIONS.find((x) => x.value === value)?.label ||
+              "Select Condition"
+            : value || `Select ${field.label}`}
+        </div>
+
+        {isOpen && !disabled && (
+          <div className="absolute bg-white border w-full max-h-40 overflow-y-auto z-50">
+            <input
+              className="w-full px-2 py-1 border-b"
+              placeholder="Search..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+            {filteredOptions.map((opt, i) => (
+              <div
+                key={i}
+                onClick={() => handleSelect(opt)}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+              >
+                {opt.name || opt}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ===== FILE ===== */
+  if (field.type === "file") {
+    return (
+      <div className="flex flex-col gap-2">
+        <label className="font-medium">{field.label}</label>
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt=""
+            className="h-48 object-cover rounded border"
+          />
+        )}
+        <input
+          type="file"
+          name={field.name}
+          multiple={field.multiple}
+          accept="image/*"
+          onChange={onChange}
+        />
+      </div>
+    );
+  }
+
+  /* ===== TEXTAREA ===== */
+  if (field.type === "textarea") {
+    return (
+      <div className="flex flex-col">
+        <label className="font-medium mb-1">{field.label}</label>
+        <textarea
+          name={field.name}
+          rows="4"
+          value={value || ""}
+          onChange={onChange}
+          className="border rounded px-3 py-2"
+        />
+      </div>
+    );
+  }
+
+  /* ===== INPUT ===== */
+  return (
+    <div className="flex flex-col">
+      <label className="font-medium mb-1">{field.label}</label>
+      <input
+        type={field.type || "text"}
+        name={field.name}
+        value={value || ""}
+        onChange={onChange}
+        className="border rounded px-3 py-2"
+        disabled={disabled}
+      />
+    </div>
+  );a
+};
+
+/* ================= ADMIN PRODUCT EDIT ================= */
+const AdminProductEdit = ({ product, onClose, onUpdateSuccess }) => {
+  const navigate = useNavigate(  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState({});
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+
+  const handleUnauthorized = () => {
+    toast.error("Session expired");
+    navigate("/login");
+  };
+
+  /* ===== INIT ===== */
+  useEffect(() => {
+    if (!product) return;
+
+    setFormData({
+      product_group: product.product_group || "",
+      productCategory: product.category?.name || "",
+      category_id: product.category_id || "",
+      product_type: product.product_type || "",
+      product_condition: product.product_condition || "",
+      fit: product.fit || "",
+      size: product.size_other ? "Other" : product.size || "",
+      other_size: product.size_other || "",
+      product_color: product.product_color || "",
+      brand: product.brand || "",
+      model_name: product.model_name || "",
+      invoice: product.invoice || "No",
+      needs_repair: product.needs_repair || "No",
+      original_box: product.original_box || "No",
+      dust_bag: product.dust_bag || "No",
+      additional_items: product.additional_items || "",
+      purchase_price: product.purchase_price || "",
+      selling_price: product.selling_price || "",
+      reason_to_sell: product.reason_to_sell || "",
+      purchase_year: product.purchase_year || "",
+      purchase_place: product.purchase_place || "",
+      product_link: product.product_link || "",
+      additional_info: product.additional_info || "",
+      more_images: [],
+    });
+
+    const imgs = {};
+    [
+      "front_photo",
+      "back_photo",
+      "label_photo",
+      "inside_photo",
+      "button_photo",
+      "wearing_photo",
+      "invoice_photo",
+      "repair_photo",
+    ].forEach((k) => {
+      if (product[k]) imgs[k] = product[k].startsWith("http") ? product[k] : API_URL + product[k];
+    });
+    setImagePreviews(imgs);
+  }, [product]);
+
+  /* ===== CATEGORY ===== */
+  useEffect(() => {
+    if (!formData.product_group) return;
+    setIsLoadingCategories(true);
+    axios
+      .get(`${API_URL}/api/product/categories-list?group=${formData.product_group}`, {
+        withCredentials: true,
+      })
+      .then((r) => r.data.success && setCategories(r.data.data))
+      .catch((e) => e.response?.status === 401 && handleUnauthorized())
+      .finally(() => setIsLoadingCategories(false));
+  }, [formData.product_group]);
+
+  /* ===== TYPES ===== */
+  useEffect(() => {
+    if (!formData.category_id) return;
+    axios
+      .get(`${API_URL}/api/product?category_id=${formData.category_id}`, {
+        withCredentials: true,
+      })
+      .then((r) => r.data.success && setTypes(r.data.data.map((x) => x.name)));
+  }, [formData.category_id]);
+
+  /* ===== CHANGE ===== */
+  const handleChange = (e) => {
+    const { name, value, type, files } = e.target;
+
+    if (type === "file") {
+      if (name === "more_images") {
+        setFormData((p) => ({
+          ...p,
+          more_images: [...p.more_images, ...Array.from(files)],
+        }));
+      } else {
+        setFormData((p) => ({ ...p, [name]: files[0] }));
+        setImagePreviews((p) => ({
+          ...p,
+          [name]: URL.createObjectURL(files[0]),
+        }));
+      }
+    } else if (name === "productCategory") {
+      const c = categories.find((x) => x.name === value);
+      setFormData((p) => ({ ...p, productCategory: value, category_id: c?.id || "" }));
+    } else if (name === "size") {
+      setFormData((p) => ({ ...p, size: value, other_size: value === "Other" ? p.other_size : "" }));
+    } else {
+      setFormData((p) => ({ ...p, [name]: value }));
+    }
+  };
+
+  /* ===== UPDATE ===== */
+  const handleUpdate = async () => {
+    const fd = new FormData();
+    Object.entries(formData).forEach(([k, v]) => {
+      if (v == null) return;
+      if (Array.isArray(v)) v.forEach((f) => fd.append(k, f));
+      else fd.append(k, v);
+    });
+
+    try {
+      setIsSubmitting(true);
+      await axios.put(`${API_URL}/api/admin/management/product/${product.id}`, fd, {
+        withCredentials: true,
+      });
+      toast.success("Product updated");
+      onUpdateSuccess?.();
+      onClose();
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /* ================= UI ================= */
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+        <div className="p-6 border-b flex justify-between">
+          <h2 className="text-2xl font-bold">Edit Product</h2>
+          <button onClick={onClose} className="text-3xl">×</button>
+        </div>
+
+        {/* STEPS */}
+        <div className="flex justify-center gap-10 py-6">
+          {["Product", "Condition", "Images", "Price & Details"].map((s, i) => (
+            <div key={i} className={step === i + 1 ? "text-orange-600 font-semibold" : ""}>
+              {i + 1}. {s}
+            </div>
+          ))}
+        </div>
+
+        <form className="p-6 space-y-10" onSubmit={(e) => e.preventDefault()}>
+
+          {/* STEP 1 - Product */}
+          {step === 1 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <FormField
+                field={{ name: "product_group", label: "Group *", type: "select", options: ["Men", "Women", "Girl", "Boy"] }}
+                value={formData.product_group}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "productCategory", label: "Category *", type: "select", options: isLoadingCategories ? [{ name: "Loading..." }] : categories }}
+                value={formData.productCategory}
+                onChange={handleChange}
+                disabled={!formData.product_group || isLoadingCategories}
+              />
+              <FormField
+                field={{ name: "product_type", label: "Type *", type: "select", options: types }}
+                value={formData.product_type}
+                onChange={handleChange}
+                disabled={!formData.category_id}
+              />
+              <FormField
+                field={{
+                  name: "product_condition",
+                  label: "Condition *",
+                  type: "select",
+                  options: PRODUCT_CONDITION_OPTIONS.map((x) => x.value),
+                }}
+                value={formData.product_condition}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "fit", label: "Fit (Only for men apparel)", type: "select", options: ["Slim", "Regular", "Loose", "Oversized", "Other"] }}
+                value={formData.fit}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "size", label: "Size *", type: "select", options: ["XS", "S", "M", "L", "XL", "XXL", "Other"] }}
+                value={formData.size}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "product_color", label: "Color", type: "text" }}
+                value={formData.product_color}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "brand", label: "Brand *", type: "text" }}
+                value={formData.brand}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "model_name", label: "Model Name ", type: "text" }}
+                value={formData.model_name}
+                onChange={handleChange}
+              />
+              {formData.size === "Other" && (
+                <div className="sm:col-span-2">
+                  <FormField
+                    field={{ name: "other_size", label: "Other Size *", type: "text" }}
+                    value={formData.other_size}
+                    onChange={handleChange}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2 - Condition */}
+          {step === 2 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <FormField
+                field={{ name: "invoice", label: "Invoice?", type: "select", options: ["No", "Yes"] }}
+                value={formData.invoice}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "invoice_photo", label: "Invoice Photo", type: "file" }}
+                onChange={handleChange}
+                previewUrl={imagePreviews.invoice_photo}
+              />
+              <FormField
+                field={{ name: "needs_repair", label: "Needs Repair?", type: "select", options: ["No", "Yes"] }}
+                value={formData.needs_repair}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "repair_photo", label: "Repair Photo", type: "file" }}
+                onChange={handleChange}
+                previewUrl={imagePreviews.repair_photo}
+              />
+              <FormField
+                field={{ name: "original_box", label: "Original Box?", type: "select", options: ["No", "Yes"] }}
+                value={formData.original_box}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "dust_bag", label: "Dust Bag?", type: "select", options: ["No", "Yes"] }}
+                value={formData.dust_bag}
+                onChange={handleChange}
+              />
+              <div className="sm:col-span-2">
+                <FormField
+                  field={{ name: "additional_items", label: "Additional Items", type: "textarea" }}
+                  value={formData.additional_items}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3 - Images */}
+          {step === 3 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                "front_photo",
+                "back_photo",
+                "label_photo",
+                "inside_photo",
+                "button_photo",
+                "wearing_photo",
+              ].map((key) => (
+                <FormField
+                  key={key}
+                  field={{
+                    name: key,
+                    label:
+                      key
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase()) + " *",
+                    type: "file",
+                  }}
+                  onChange={handleChange}
+                  previewUrl={imagePreviews[key]}
+                />
+              ))}
+              <div className="lg:col-span-3">
+                <FormField
+                  field={{
+                    name: "more_images",
+                    label: "More Images (Optional)",
+                    type: "file",
+                    multiple: true,
+                  }}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4 - Price & Details */}
+          {step === 4 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <FormField
+                field={{ name: "purchase_price", label: "Purchase Price (₹)", type: "number" }}
+                value={formData.purchase_price}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "selling_price", label: "Selling Price (₹)", type: "number" }}
+                value={formData.selling_price}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "reason_to_sell", label: "Reason to Sell", type: "text" }}
+                value={formData.reason_to_sell}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "purchase_year", label: "Purchase Year", type: "number" }}
+                value={formData.purchase_year}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "purchase_place", label: "Purchase Place", type: "text" }}
+                value={formData.purchase_place}
+                onChange={handleChange}
+              />
+              <FormField
+                field={{ name: "product_link", label: "Product Link", type: "url" }}
+                value={formData.product_link}
+                onChange={handleChange}
+              />
+              <div className="sm:col-span-2">
+                <FormField
+                  field={{ name: "additional_info", label: "Additional Info", type: "textarea" }}
+                  value={formData.additional_info}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ===== ACTIONS ===== */}
+          <div className="flex justify-between border-t pt-6">
+            <button onClick={onClose} className="bg-gray-600 text-white px-6 py-2 rounded">Cancel</button>
+            <div className="flex gap-4">
+              {step > 1 && <button onClick={() => setStep(step - 1)} className="px-6 py-2 bg-gray-300 rounded">Back</button>}
+              {step < 4 ? (
+                <button onClick={() => setStep(step + 1)} className="px-8 py-2 bg-orange-600 text-white rounded">Next</button>
+              ) : (
+                <button onClick={handleUpdate} disabled={isSubmitting} className="px-8 py-2 bg-green-600 text-white rounded">
+                  {isSubmitting ? "Updating..." : "Update Product"}
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AdminProductEdit;

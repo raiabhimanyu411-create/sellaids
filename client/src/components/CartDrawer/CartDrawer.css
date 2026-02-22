@@ -1,0 +1,25 @@
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: .3s;
+  z-index: 9999;
+}
+.cart-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cart-drawer {
+  position: absolute;
+  right: -420px;
+  top: 0;
+  width: 380px;
+  height: 100%;
+  background: #fff;
+  transition: .4s ease;
+}
+.cart-overlay.show .cart-drawer {
+  right: 0;
+}

@@ -1,0 +1,58 @@
+{
+  "name": "ecommerce-platform",
+  "version": "1.0.0",
+  "description": "e-commerce platform with user, vendor and admin panels",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [
+    "[\"ecommerce\"",
+    "\"nodejs\"",
+    "\"express\"",
+    "\"mysql\"",
+    "\"sequelize\"]"
+  ],
+  "author": "Piyush",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.967.0",
+    "aws-sdk": "^2.1693.0",
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^1.41.3",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.18.2",
+    "fs": "^0.0.1-security",
+    "google-auth-library": "^10.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "mysql2": "^3.15.2",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.9",
+    "pdfkit": "^0.17.2",
+    "razorpay": "^2.9.6",
+    "request-promise": "^4.2.6",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
+    "sharp": "^0.34.5",
+    "smsalert": "^1.0.1",
+    "uuid": "^13.0.0",
+    "winston": "^3.18.3",
+    "xlsx": "^0.18.5",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
