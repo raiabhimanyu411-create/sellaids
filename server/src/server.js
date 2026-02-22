@@ -14,3 +14,5 @@ app.listen(PORT, ( err) => {
         logger.info(`Server running on http://localhost:${PORT}`)
     }
 })
+
+export default app;
