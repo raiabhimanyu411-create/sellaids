@@ -7,7 +7,7 @@ import useCartStore from "../../stores/useCartStore";
 import { useUserStore } from "../../stores/useUserStore";
 import { useCartActions } from "../../stores/useCartActions";
 import CartRightSlider from "../../components/CartRightSlider";
-
+import { fixCloudinaryUrl } from "../../utils/fixCloudinaryUrl";
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ const Shop = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-const { fetchCart } = useCartStore();
+  const { fetchCart } = useCartStore();
   const { isAuthenticated, isUserLoading } = useUserStore();
   const { pendingAdd, setPendingAdd } = useCartActions();
 
@@ -392,14 +392,14 @@ const { fetchCart } = useCartStore();
 
               return (
                 <div key={product._id} className="group overflow-hidden transition-all duration-300">
-                  <div className="relative h-80 overflow-hidden rounded-t-xl bg-gray-50">
+                  <div className="relative overflow-hidden rounded-t-xl bg-gray-50 aspect-[1/1]">
                     <img
-                      src={product?.product_img || "/placeholder-image.jpg"}
+                      src={fixCloudinaryUrl(product?.product_img) || "/placeholder-image.jpg"}
                       alt={product.product_name}
                       onClick={() => handleNavigate(product._id)}
-                      className="object-cover w-full h-full cursor-pointer
-                                  transition-transform duration-500 ease-in-out
-                                  group-hover:scale-105"
+                      className="object-contain w-full h-full cursor-pointer
+      transition-transform duration-500 ease-in-out
+      group-hover:scale-105"
                     />
 
                     {/* OUT OF STOCK overlay – only on image */}

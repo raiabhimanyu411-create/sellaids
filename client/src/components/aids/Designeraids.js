@@ -121,7 +121,7 @@ const Designeraids = () => {
               <img
                 src={category.image}
                 alt={category.title}
-                className="w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-500"
+               className="w-full aspect-[3/4] object-contain bg-gray-50 transform group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
                 <Link
